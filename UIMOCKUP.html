@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Voice · Agent chat</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --surface-warm: var(--surface);
+      --fg: #111111;
+      --fg-2: var(--fg);
+      --muted: #6b6b6b;
+      --meta: var(--muted);
+      --border: #e5e5e5;
+      --border-soft: var(--border);
+      --accent: #2f6feb;
+      --accent-on: #ffffff;
+      --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+      --accent-active: color-mix(in oklab, var(--accent), black 14%);
+      --success: #17a34a;
+      --warn: #eab308;
+      --danger: #dc2626;
+      --font-display: "Inter", -apple-system, system-ui, sans-serif;
+      --font-body: "Inter", -apple-system, system-ui, sans-serif;
+      --font-mono: ui-monospace, "JetBrains Mono", monospace;
+      --text-xs: 12px;
+      --text-sm: 14px;
+      --text-base: 16px;
+      --text-lg: 20px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-pill: 9999px;
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --elev-flat: none;
+      --elev-ring: 0 0 0 1px var(--border);
+      --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+      --motion-fast: 150ms;
+      --motion-base: 200ms;
+      --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+      --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+      --fg-soft: color-mix(in oklab, var(--fg) 5%, transparent);
+      --header-h: 52px;
+      --composer-h: 72px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: var(--surface);
+      color: var(--fg);
+      font-family: var(--font-body);
+      font-size: var(--text-base);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    button { font: inherit; cursor: pointer; border: none; background: none; }
+    p { text-wrap: pretty; margin: 0; }
+
+    .app {
+      display: grid;
+      grid-template-rows: var(--header-h) 1fr auto;
+      width: 100%;
+      height: 100dvh;
+      height: 100svh;
+      background: var(--surface);
+    }
+
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-left: max(var(--space-5), env(safe-area-inset-left));
+      padding-right: max(var(--space-5), env(safe-area-inset-right));
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+    .app-header .brand {
+      font-family: var(--font-display);
+      font-size: var(--text-base);
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+    .conn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: var(--text-xs);
+      color: var(--muted);
+    }
+    .conn-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 2px color-mix(in oklab, var(--success) 25%, transparent);
+    }
+
+    .chat-thread {
+      overflow-y: auto;
+      padding: var(--space-5);
+      padding-left: max(var(--space-5), env(safe-area-inset-left));
+      padding-right: max(var(--space-5), env(safe-area-inset-right));
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-4);
+      scroll-behavior: smooth;
+      min-height: 0;
+    }
+    .chat-thread:focus { outline: none; }
+
+    .day-divider {
+      text-align: center;
+      font-size: var(--text-xs);
+      color: var(--muted);
+      padding-block: var(--space-2);
+    }
+
+    .msg {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 92%;
+      animation: msg-in var(--motion-base) var(--ease-standard);
+    }
+    @keyframes msg-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg.user { align-self: flex-end; align-items: flex-end; }
+    .msg.agent { align-self: flex-start; align-items: flex-start; }
+
+    .msg-meta {
+      font-size: var(--text-xs);
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .bubble {
+      padding: var(--space-3) var(--space-4);
+      border-radius: var(--radius-md);
+      font-size: var(--text-base);
+      line-height: 1.45;
+    }
+    .msg.user .bubble {
+      background: var(--fg-soft);
+      border: 1px solid var(--border);
+      border-bottom-right-radius: 4px;
+    }
+    .msg.agent .bubble {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .agent-row {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-3);
+    }
+    .play-btn {
+      flex-shrink: 0;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      color: var(--fg);
+      transition: background var(--motion-fast) var(--ease-standard),
+                  border-color var(--motion-fast) var(--ease-standard);
+    }
+    .play-btn:hover { border-color: var(--fg); background: var(--fg-soft); }
+    .play-btn:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+    .play-btn.playing {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-on);
+    }
+    .play-btn svg { width: 14px; height: 14px; }
+
+    .typing {
+      align-self: flex-start;
+      display: none;
+      align-items: center;
+      gap: 8px;
+      padding: var(--space-3) var(--space-4);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: var(--text-sm);
+      color: var(--muted);
+    }
+    .typing.visible { display: inline-flex; }
+    .typing-dots {
+      display: inline-flex;
+      gap: 4px;
+    }
+    .typing-dots span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+      animation: typing-bounce 1s ease-in-out infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes typing-bounce {
+      0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+      30% { transform: translateY(-4px); opacity: 1; }
+    }
+
+  /* ─── composer ─── */
+    .composer {
+      border-top: 1px solid var(--border);
+      padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+      padding-left: max(var(--space-4), env(safe-area-inset-left));
+      padding-right: max(var(--space-4), env(safe-area-inset-right));
+      background: var(--bg);
+    }
+    .composer-row {
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+    }
+    .composer-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      min-height: 44px;
+      padding-inline: var(--space-4);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      transition: border-color var(--motion-fast) var(--ease-standard),
+                  box-shadow var(--motion-fast) var(--ease-standard);
+    }
+    .composer-input-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: var(--focus-ring);
+    }
+  .composer-input-wrap[data-recording="true"] {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .composer-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font: inherit;
+      font-size: var(--text-base);
+      color: var(--fg);
+      min-width: 0;
+    }
+    .composer-input::placeholder { color: var(--muted); }
+    .composer-input:disabled {
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .btn-mic {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg);
+      display: grid;
+      place-items: center;
+      transition: background var(--motion-fast) var(--ease-standard),
+                  border-color var(--motion-fast) var(--ease-standard),
+                  color var(--motion-fast) var(--ease-standard);
+    }
+    .btn-mic:hover { border-color: var(--fg); background: var(--fg-soft); }
+    .btn-mic:focus-visible { box-shadow: var(--focus-ring); outline: none; }
+    .btn-mic[data-recording="true"] {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: var(--accent-on);
+    }
+    .btn-mic svg { width: 20px; height: 20px; }
+
+    .composer-hint {
+      margin-top: var(--space-2);
+      font-size: var(--text-xs);
+      color: var(--muted);
+      text-align: center;
+    }
+    .composer-hint[data-state="recording"] { color: var(--accent); }
+
+    @media (max-width: 480px) {
+      .msg { max-width: 96%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" data-od-id="voice-chat-app">
+    <header class="app-header" data-od-id="header">
+      <span class="brand">Voice</span>
+      <span class="conn" aria-live="polite">
+        <span class="conn-dot" aria-hidden="true"></span>
+        Connected
+      </span>
+    </header>
+
+    <main class="chat-thread" id="thread" tabindex="0" data-od-id="thread" aria-label="Conversation">
+      <div class="day-divider">Today</div>
+
+      <article class="msg user" data-od-id="msg-user-1">
+        <span class="msg-meta">You · 9:14 AM</span>
+        <p class="bubble">What&apos;s on my calendar for tomorrow morning?</p>
+      </article>
+
+      <article class="msg agent" data-od-id="msg-agent-1">
+        <span class="msg-meta">Agent · 9:14 AM</span>
+        <div class="agent-row">
+          <button type="button" class="play-btn" id="play-sample" aria-label="Play agent response" data-playing="false">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <p class="bubble">You have a product review at 9:30 and a 1:1 with Jordan at 11. Want me to block focus time before the review?</p>
+        </div>
+      </article>
+
+      <div class="typing" id="typing" aria-live="polite">
+        <span class="typing-dots" aria-hidden="true"><span></span><span></span><span></span></span>
+        Agent is thinking…
+      </div>
+    </main>
+
+    <footer class="composer" data-od-id="composer">
+      <div class="composer-row">
+        <div class="composer-input-wrap" id="input-wrap">
+          <input
+            type="text"
+            class="composer-input"
+            id="prompt-input"
+            placeholder="Type a message…"
+            autocomplete="off"
+            aria-label="Message input"
+          />
+        </div>
+        <button
+          type="button"
+          class="btn-mic"
+          id="btn-mic"
+          aria-label="Record voice message"
+          aria-pressed="false"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path d="M12 14a3 3 0 0 0 3-3V6a3 3 0 1 0-6 0v5a3 3 0 0 0 3 3z"/>
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1M12 18v3M8 21h8"/>
+          </svg>
+        </button>
+      </div>
+      <p class="composer-hint" id="composer-hint">Press Enter to send · tap mic to speak</p>
+    </footer>
+  </div>
+
+  <script>
+    (function () {
+      const RESPONSES = {
+        default: 'I can help with that. Tell me a bit more about what you need and I\'ll take it from here.',
+        calendar: 'You have a product review at 9:30 and a 1:1 with Jordan at 11. Want me to block focus time before the review?',
+        remind: 'Got it — I\'ll nudge you at 10:05, right after standup ends. Want that on Slack or as a system notification?',
+        summarize: 'Three themes stood out: tighten the composer layout, add playback scrubbing on long replies, and make the mic state obvious without extra chrome.'
+      };
+
+      const VOICE_SAMPLES = [
+        'Remind me to send the Q2 roadmap draft after standup.',
+        'Summarize the notes from yesterday\'s design critique.',
+        'What meetings do I have this afternoon?'
+      ];
+
+      const thread = document.getElementById('thread');
+      const typing = document.getElementById('typing');
+      const input = document.getElementById('prompt-input');
+      const inputWrap = document.getElementById('input-wrap');
+      const btnMic = document.getElementById('btn-mic');
+      const composerHint = document.getElementById('composer-hint');
+      const playSample = document.getElementById('play-sample');
+
+      let recording = false;
+      let recordTimer = null;
+      let voiceSampleIndex = 0;
+      let playingTimer = null;
+      let busy = false;
+
+      function scrollThread() {
+        const top = thread.scrollHeight - thread.clientHeight;
+        thread.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }
+
+      function formatTime() {
+        return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+      }
+
+      function pickResponse(text) {
+        const lower = text.toLowerCase();
+        if (lower.includes('calendar') || lower.includes('meeting') || lower.includes('tomorrow')) return RESPONSES.calendar;
+        if (lower.includes('remind')) return RESPONSES.remind;
+        if (lower.includes('summar')) return RESPONSES.summarize;
+        return RESPONSES.default;
+      }
+
+      function wirePlayButton(btn) {
+        btn.addEventListener('click', function () {
+          const isPlaying = btn.dataset.playing === 'true';
+          document.querySelectorAll('.play-btn.playing').forEach(function (b) {
+            b.classList.remove('playing');
+            b.dataset.playing = 'false';
+            b.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+          });
+          clearTimeout(playingTimer);
+          if (isPlaying) return;
+
+          btn.classList.add('playing');
+          btn.dataset.playing = 'true';
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h4v14H6zm8 0h4v14h-4z"/></svg>';
+          playingTimer = setTimeout(function () {
+            btn.classList.remove('playing');
+            btn.dataset.playing = 'false';
+            btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+          }, 3200);
+        });
+      }
+
+      function addMessage(role, text) {
+        const article = document.createElement('article');
+        article.className = 'msg ' + role;
+        article.dataset.odId = 'msg-' + role + '-' + Date.now();
+
+        const meta = document.createElement('span');
+        meta.className = 'msg-meta';
+        meta.textContent = (role === 'user' ? 'You' : 'Agent') + ' · ' + formatTime();
+
+        if (role === 'user') {
+          const bubble = document.createElement('p');
+          bubble.className = 'bubble';
+          bubble.textContent = text;
+          article.append(meta, bubble);
+        } else {
+          const row = document.createElement('div');
+          row.className = 'agent-row';
+          const play = document.createElement('button');
+          play.type = 'button';
+          play.className = 'play-btn';
+          play.setAttribute('aria-label', 'Play agent response');
+          play.dataset.playing = 'false';
+          play.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>';
+          const bubble = document.createElement('p');
+          bubble.className = 'bubble';
+          bubble.textContent = text;
+          row.append(play, bubble);
+          article.append(meta, row);
+          wirePlayButton(play);
+        }
+
+        thread.insertBefore(article, typing);
+        scrollThread();
+        return article;
+      }
+
+      function setRecording(on) {
+        recording = on;
+        btnMic.dataset.recording = on ? 'true' : 'false';
+        btnMic.setAttribute('aria-pressed', on ? 'true' : 'false');
+        inputWrap.dataset.recording = on ? 'true' : 'false';
+        input.disabled = on;
+        composerHint.dataset.state = on ? 'recording' : '';
+        composerHint.textContent = on ? 'Listening… tap mic again to send' : 'Press Enter to send · tap mic to speak';
+      }
+
+      function sendPrompt(text) {
+        const trimmed = text.trim();
+        if (!trimmed || busy) return;
+
+        busy = true;
+        input.value = '';
+        addMessage('user', trimmed);
+        typing.classList.add('visible');
+        scrollThread();
+
+        setTimeout(function () {
+          typing.classList.remove('visible');
+          const agentMsg = addMessage('agent', pickResponse(trimmed));
+          const play = agentMsg.querySelector('.play-btn');
+          if (play) play.click();
+          busy = false;
+        }, 1400);
+      }
+
+      function toggleRecording() {
+        if (busy) return;
+
+        if (!recording) {
+          setRecording(true);
+          const sample = VOICE_SAMPLES[voiceSampleIndex % VOICE_SAMPLES.length];
+          voiceSampleIndex += 1;
+          let i = 0;
+          input.value = '';
+          clearInterval(recordTimer);
+          recordTimer = setInterval(function () {
+            i += 1;
+            input.value = sample.slice(0, i);
+            if (i >= sample.length) clearInterval(recordTimer);
+          }, 28);
+          return;
+        }
+
+        clearInterval(recordTimer);
+        setRecording(false);
+        sendPrompt(input.value);
+      }
+
+      wirePlayButton(playSample);
+
+      input.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendPrompt(input.value);
+        }
+      });
+
+      btnMic.addEventListener('click', toggleRecording);
+    })();
+  </script>
+</body>
+</html>
