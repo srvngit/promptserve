@@ -1,0 +1,6 @@
+# Home XYZ is the scan pose (Orbbec capture + static T_cam_to_arm). RPY is ignored at
+# runtime — grasp orientation is read from live arm feedback on connect.
+home_pose: {x: 0.25, y: 0.0, z: 0.35, rx: 0, ry: 0, rz: 0}
+bounds: {x_min: 0.1, x_max: 0.45, y_min: -0.25, y_max: 0.25, z_min: 0.05, z_max: 0.40}
+approach_offset_mm: 80
+speed_percent: 30

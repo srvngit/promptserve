@@ -1,0 +1,24 @@
+# Wrist-mounted Orbbec DaBai DC1 — transform assumes the frame was captured
+# at the home pose (see config/workspace.yaml). Units: camera point in mm in,
+# arm-base point in mm out (locate.py converts mm → m).
+#
+# Math at home_pose = (0.25 m, 0 m, 0.35 m), gripper pointing down:
+#   camera +X (image right)  →  arm -Y  (arm's right side)
+#   camera +Y (image down)   →  arm -X  (toward arm base)
+#   camera +Z (depth/forward)→  arm -Z  (downward)
+# Translation column = home pose in mm so camera-frame origin maps to the
+# wrist position. A point at image-center depth 250 mm therefore lands at
+# (0.25, 0.00, 0.10) m — i.e. ~10 cm above the floor, on the table.
+#
+# If you see motion mirrored on an axis after running `demo`, flip the
+# corresponding sign(s) in the rotation rows, or run `calibrate-wrist` for a
+# data-driven fit (it overwrites this file with a Kabsch-fitted transform).
+T_cam_to_arm:
+  - [ 0, -1,  0, 250.0]
+  - [-1,  0,  0,   0.0]
+  - [ 0,  0, -1, 350.0]
+  - [ 0,  0,  0,   1.0]
+
+# Fallback intrinsics for webcams (no SDK). Orbbec frames carry their own
+# intrinsics from the pipeline and override these at capture time.
+color_intrinsics: {fx: 600, fy: 600, cx: 320, cy: 240}

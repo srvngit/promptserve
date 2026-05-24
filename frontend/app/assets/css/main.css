@@ -1,0 +1,121 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/*
+ * Voice chat design tokens — sourced from repo-root UIMOCKUP.html (:root).
+ * Layout-specific vars (--header-h, --fg-soft, etc.) are consumed by app/layouts/default.vue.
+ */
+@theme static {
+  --color-voice-50: #eff4fe;
+  --color-voice-100: #dbe7fd;
+  --color-voice-200: #b8cffb;
+  --color-voice-300: #8eb0f7;
+  --color-voice-400: #5c8ef2;
+  --color-voice-500: #2f6feb;
+  --color-voice-600: #2558c4;
+  --color-voice-700: #1e469e;
+  --color-voice-800: #183778;
+  --color-voice-900: #122b5c;
+  --color-voice-950: #0c1d3f;
+
+  --color-voice-success-50: #ecfdf3;
+  --color-voice-success-100: #d1fae0;
+  --color-voice-success-200: #a7f3c7;
+  --color-voice-success-300: #6ee7a7;
+  --color-voice-success-400: #34d399;
+  --color-voice-success-500: #17a34a;
+  --color-voice-success-600: #15803d;
+  --color-voice-success-700: #166534;
+  --color-voice-success-800: #14532d;
+  --color-voice-success-900: #134e26;
+  --color-voice-success-950: #052e16;
+}
+
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --surface-warm: var(--surface);
+  --fg: #111111;
+  --fg-2: var(--fg);
+  --muted: #6b6b6b;
+  --meta: var(--muted);
+  --border: #e5e5e5;
+  --border-soft: var(--border);
+  --accent: #2f6feb;
+  --accent-on: #ffffff;
+  --accent-hover: color-mix(in oklab, var(--accent), black 8%);
+  --accent-active: color-mix(in oklab, var(--accent), black 14%);
+  --success: #17a34a;
+  --warn: #eab308;
+  --danger: #dc2626;
+  --font-display: "Inter", -apple-system, system-ui, sans-serif;
+  --font-body: "Inter", -apple-system, system-ui, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 20px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-pill: 9999px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --elev-flat: none;
+  --elev-ring: 0 0 0 1px var(--border);
+  --focus-ring: 0 0 0 3px color-mix(in oklab, var(--accent), transparent 70%);
+  --motion-fast: 150ms;
+  --motion-base: 200ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --accent-soft: color-mix(in oklab, var(--accent) 12%, transparent);
+  --fg-soft: color-mix(in oklab, var(--fg) 5%, transparent);
+  --header-h: 52px;
+  --composer-h: 72px;
+
+  --ui-primary: var(--color-voice-500);
+  --ui-success: var(--color-voice-success-500);
+}
+
+.voice-app {
+  display: grid;
+  grid-template-rows: var(--header-h) 1fr auto;
+  width: 100%;
+  height: 100dvh;
+  height: 100svh;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+.voice-app__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header-h);
+  padding-left: max(var(--space-5), env(safe-area-inset-left));
+  padding-right: max(var(--space-5), env(safe-area-inset-right));
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.voice-app__thread {
+  overflow-y: auto;
+  min-height: 0;
+  padding: var(--space-5);
+  padding-left: max(var(--space-5), env(safe-area-inset-left));
+  padding-right: max(var(--space-5), env(safe-area-inset-right));
+  scroll-behavior: smooth;
+}
+
+.voice-app__composer {
+  border-top: 1px solid var(--border);
+  padding: var(--space-3) var(--space-4) max(var(--space-4), env(safe-area-inset-bottom));
+  padding-left: max(var(--space-4), env(safe-area-inset-left));
+  padding-right: max(var(--space-4), env(safe-area-inset-right));
+  background: var(--bg);
+}
